@@ -6,59 +6,55 @@
 #include <vector>
 #include <ctime>
 #include <windows.h>
+#include "./gui.cpp"
 
 using namespace std;
-
-class stock
-{
-public:
-    string name;
-    float buyPrice;
-    int holdings;
-};
 
 vector<stock> getInterests()
 {
     ifstream file("./utilfiles/interests.csv");
     string lineStr;
     vector<stock> stocks;
-    int pos1;
-    int pos0;
+    int pos1, pos0;
 
-    string buyPriceStr, holdingsStr;
+    string nameStr, buyPriceStr, holdingsStr;
+    float buyPrice;
+    int holdings;
 
     // Parse Headers
     getline(file, lineStr);
 
     while (getline(file, lineStr)){
         
-        stock row;
         pos1 = lineStr.find(",");
-        row.name = lineStr.substr(0, pos1);
+        nameStr = lineStr.substr(0, pos1);
 
         pos0 = pos1;
         pos1 = lineStr.find(",", pos0+1);
         buyPriceStr = lineStr.substr(pos0+1, pos1-pos0-1);
+
         if (buyPriceStr.size()){
-            row.buyPrice = stof(buyPriceStr);
+            buyPrice = stof(buyPriceStr);
         } else {
-            row.buyPrice = 0.0f;
+            buyPrice = 0.0f;
         }
 
         holdingsStr = lineStr.substr(pos1+1);
-        row.holdings = stoi(holdingsStr);
+        holdings = stoi(holdingsStr);
 
+        stock row = stock(nameStr, buyPrice, holdings);
         stocks.push_back(row);
     }
 
     return stocks;
 }
 
-void pyQuery(vector<stock> stocks){
+void pyQuery(vector<stock>& stocks){
 
     PyObject *pName, *pModule, *pFunc;
     PyObject *pArgs, *pValue;
     string stockName;
+    double queueVal;
 
     Py_SetPath(L"C:\\Users\\TalG\\Miniconda3\\Lib");
     Py_Initialize();
@@ -81,18 +77,16 @@ void pyQuery(vector<stock> stocks){
     Py_DecRef(pName);
 
     pFunc = PyObject_GetAttrString(pModule, "query_price");
+    //pFunc = PyObject_GetAttrString(pModule, "debug_query_price");
     pValue = PyObject_CallFunctionObjArgs(pFunc, pArgs, NULL);
-
-    vector<double> output;
 
     if (PyList_Check(pValue)){
         
         PyObject* next;
         for (int i = 0; i < PyList_Size(pValue); ++i){
-
             next = PyList_GetItem(pValue, i);
-            output.push_back(PyFloat_AsDouble(next));
-            cout << "Stock Name:" << stocks[i].name << " Price:" << output[i] << endl;
+            queueVal = PyFloat_AsDouble(next);
+            stocks[i].enqueue((float) queueVal);
         }
     }
 
@@ -119,11 +113,10 @@ bool marketOpen(){
     return true;
 }
 
-void loopUI(){
+void loop(vector<stock>& stocks){
 
     if (marketOpen()){
-        
+        pyQuery(stocks);
+        loopUI();
     } 
-
-    Sleep(1000);
 }

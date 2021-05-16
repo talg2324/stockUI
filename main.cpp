@@ -2,16 +2,18 @@
 #include <vector>
 
 #include "./control.cpp"
-#include "./gui.cpp"
 
 using namespace std;
 
 int main()
 {
-    //vector<stock> interests = getInterests();
-    //pyQuery(interests);
-    initUI();
-    while (true){
-        loopUI();
+    bool runProgram = true;
+    vector<stock> interests = getInterests();
+    pyQuery(interests);
+    initUI(interests, runProgram);
+    loopUI();
+    
+    while (runProgram){
+        loop(interests);
     }
 }

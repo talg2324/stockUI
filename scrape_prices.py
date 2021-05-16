@@ -22,6 +22,8 @@ def query_price(stocks):
             f.write(str(e))
             f.close()
 
+def debug_query_price(stocks):
+    return [float(0) for i in stocks]
 
 def get_access_key():
     with open('./utilfiles/key.txt') as f:
