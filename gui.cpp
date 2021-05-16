@@ -17,7 +17,7 @@ static vector<stock> stocks;
 static bool* runProgramPtr = NULL;
 
 void loopUI(){
-
+    
     // Prepare to redraw
     canvas(reset) = Vec3b(0, 0, 0);
     stock dispStock = stocks[displayClass];
